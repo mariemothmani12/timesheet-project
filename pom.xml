@@ -53,6 +53,14 @@
 
 
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 	</dependencies>
 
 	<!-- Deploy to Nexus -->
@@ -75,6 +83,18 @@
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>3.1.0</version>
 			</plugin>
+                        <plugin>
+                                <groupId>org.owasp</groupId>
+                                <artifactId>dependency-check-maven</artifactId>
+                                <version>8.4.3</version>
+                                <executions>
+                                        <execution>
+                                                <goals>
+                                                        <goal>check</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
 		</plugins>
 	</build>
 
