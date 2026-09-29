@@ -132,6 +132,18 @@ pipeline {
       }
     }
 
+    stage('SECURITY ACCEPTANCE (Gauntlt)') {
+      steps {
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          sh '''
+            docker run --rm --network host \
+              -v "$WORKSPACE/gauntlt":/work -w /work \
+              gauntlt/gauntlt gauntlt nmap.attack
+          '''
+        }
+      }
+    }
+
     stage('MONITORING') {
       steps {
         sh '''
@@ -157,7 +169,7 @@ pipeline {
     unstable {
       mail to: "${MAIL_TO}",
            subject: "BUILD TERMINE (alertes securite) : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-           body: "Le pipeline s'est execute en entier. Les scans Talisman/OWASP ont detecte des problemes (stages rouges = normal en DevSecOps).\n\nJob : ${env.JOB_NAME}\nBuild : #${env.BUILD_NUMBER}\nStatut : UNSTABLE\nDetails : ${env.BUILD_URL}"
+           body: "Le pipeline s'est execute en entier. Scans securite (Talisman/OWASP/Gauntlt) : voir les alertes.\n\nJob : ${env.JOB_NAME}\nBuild : #${env.BUILD_NUMBER}\nStatut : UNSTABLE\nDetails : ${env.BUILD_URL}"
     }
     failure {
       mail to: "${MAIL_TO}",

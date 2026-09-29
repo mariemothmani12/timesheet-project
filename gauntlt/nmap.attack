@@ -1,0 +1,29 @@
+Feature: Tests de securite reseau (nmap) - application Timesheet
+
+Background:
+  Given "nmap" is installed
+  And the following profile:
+    | name           | value       |
+    | hostname       | 127.0.0.1   |
+    | host           | 127.0.0.1   |
+    | tcp_ping_ports | 8082        |
+
+Scenario: L'application Timesheet ecoute bien sur le port 8082
+  When I launch an "nmap" attack with:
+    """
+    nmap -Pn -sT -p 8082 <hostname>
+    """
+  Then the output should match:
+    """
+    8082/tcp\s+open
+    """
+
+Scenario: Aucun service dangereux (Telnet/FTP) n'est expose
+  When I launch an "nmap" attack with:
+    """
+    nmap -Pn -sT -p 21,23 <hostname>
+    """
+  Then the output should not contain:
+    """
+    23/tcp open
+    """
