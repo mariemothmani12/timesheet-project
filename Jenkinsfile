@@ -24,6 +24,7 @@ pipeline {
     KUBECTL         = "/usr/local/bin/kubectl"
 
     NVD_API_KEY = "3C2C450B-8BCF-4EE6-9B18-6EA032A776D1"
+    MAIL_TO     = "mariem.othmani@esprit.tn"
   }
 
   stages {
@@ -137,8 +138,6 @@ pipeline {
           echo "=== Verification Prometheus : metrique up des cibles ==="
           curl -s "http://localhost:9090/api/v1/query?query=up"
           echo ""
-          echo "======================================================="
-          echo "value = 1  =>  cible UP (scrapee avec succes)"
           echo "Prometheus : http://localhost:9090"
           echo "Grafana    : http://localhost:3000"
         '''
@@ -147,8 +146,23 @@ pipeline {
   }
 
   post {
-    always  { sh 'docker image prune -f || true' }
-    success { echo 'Pipeline DevSecOps termine avec succes !' }
-    failure { echo 'Pipeline en echec.' }
+    always {
+      sh 'docker image prune -f || true'
+    }
+    success {
+      mail to: "${MAIL_TO}",
+           subject: "BUILD REUSSI : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+           body: "Le pipeline DevSecOps s'est termine avec succes.\n\nJob : ${env.JOB_NAME}\nBuild : #${env.BUILD_NUMBER}\nStatut : SUCCESS\nDetails : ${env.BUILD_URL}"
+    }
+    unstable {
+      mail to: "${MAIL_TO}",
+           subject: "BUILD TERMINE (alertes securite) : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+           body: "Le pipeline s'est execute en entier. Les scans Talisman/OWASP ont detecte des problemes (stages rouges = normal en DevSecOps).\n\nJob : ${env.JOB_NAME}\nBuild : #${env.BUILD_NUMBER}\nStatut : UNSTABLE\nDetails : ${env.BUILD_URL}"
+    }
+    failure {
+      mail to: "${MAIL_TO}",
+           subject: "BUILD ECHOUE : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+           body: "Le pipeline a echoue.\n\nJob : ${env.JOB_NAME}\nBuild : #${env.BUILD_NUMBER}\nDetails : ${env.BUILD_URL}"
+    }
   }
 }
